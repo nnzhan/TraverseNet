@@ -1,0 +1,28 @@
+{
+    "gpu": {
+        "use": true,
+        "id": 0
+    },
+
+    "params": {
+        "seed": 9,
+        "epochs": 1,
+        "runs": 1,
+        "batch_size": 64,
+        "lr": 0.001,
+        "weight_decay": 0,
+        "clip": 5,
+        "print_every": 50,
+        "dataset": "PEMS-D8",
+        "out_dir": "save_stgcn"
+    },
+
+    "net_params": {
+        "model": "stgcn",
+        "in_dim": 3,
+        "num_nodes": 170,
+        "seq_in_len": 12,
+        "seq_out_len": 12
+    }
+}
+
