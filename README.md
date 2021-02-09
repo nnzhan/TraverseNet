@@ -3,7 +3,7 @@
 ## Preparation
 
 1. Download data from https://github.com/Davidham3/STSGCN
-2. Move the downloaded dataset in the data folder
+2. Make the data folder and move the downloaded dataset into the data folder
 3. Run
 ```
 python proc_data.py
