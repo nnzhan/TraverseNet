@@ -6,6 +6,7 @@ import torch.optim as optim
 
 
 class RTrainer:
+    # a trainer for models that make predictions sequentially.
     def __init__(self, model, optimizer, lr_scheduler, loss, dataloader, params, net_params, scaler, device):
         self.model = model.to(device)
         self.optimizer = optimizer
