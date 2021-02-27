@@ -3,6 +3,7 @@ from utils import metrics
 import numpy as np
 import time
 class TGtrainer:
+    #to do: to be deleted from project
     def __init__(self, model, optimizer, lr_scheduler, loss, dataloader, params, seq_out_len, scaler, device):
         self.model = model
         self.model.to(device)
