@@ -4,52 +4,9 @@ from scipy.sparse import linalg
 import pandas as pd
 import torch
 import tqdm
-# def process_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
-#     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist, 'dist': dist})
-#     df = df.sort_values(by=['tgt','dist'], ignore_index=True)
-#     print(df.loc[0:30])
-#     dfn = pd.DataFrame(columns=['rel', 'src', 'src_t', 'tgt', 'tgt_t'])
-#     rel = dict()
-#     for i in range(len(df)):
-#         print(i)
-#         if df.loc[i][1] not in rel.keys():
-#             ctr = 0
-#             rel[df.loc[i][1]] = [str(ctr)]
-#         else:
-#             ctr += 1
-#         dis = df.loc[i][2]
-#         if dis==0:
-#             rela = str(ctr)+"_-1"
-#         elif dis>1e8:
-#             rela = str(ctr)+"_0"
-#         else:
-#             rela = str(ctr)+"_1"
-#
-#         for j in range(T):
-#             s = j-window
-#             if s<0:
-#                 s=0
-#             for k in range(s,j+1):
-#                 dfn = dfn.append({'rel': rela, 'src': int(df.loc[i][0]), 'src_t': int(k), 'tgt': int(df.loc[i][1]), 'tgt_t': int(j)},
-#                                  ignore_index=True)
-#     print(dfn)
-#     g = dict()
-#     for i in range(len(dfn)):
-#         if dfn.loc[i][0] not in g.keys():
-#             g[dfn.loc[i][0]] = pd.DataFrame(columns=['rel', 'src', 'tgt'])
-#         src = dfn.loc[i][2] * num_nodes + dfn.loc[i][1]
-#         tgt = dfn.loc[i][4] * num_nodes + dfn.loc[i][3]
-#         g[dfn.loc[i][0]] = g[dfn.loc[i][0]].append({'rel': dfn.loc[i][0], 'src': src, 'tgt': tgt}, ignore_index=True)
-#     graph_data = dict()
-#     print('number of relations ', len(g.keys()))
-#     for k in g.keys():
-#         key = ('v', 'r' + str(k), 'v')
-#         value = (torch.tensor(g[k]['src'].to_numpy(dtype=int)), torch.tensor(g[k]['tgt'].to_numpy(dtype=int)))
-#         graph_data[key] = value
-#     # g = dgl.heterograph(graph_data)
-#     return graph_data
 
 def process_t_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
+    #assign the same edge type to connections between a node's current state and its neigbhor's all historial states.
     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist, 'dist': dist})
     df = df.sort_values(by=['tgt','dist'], ignore_index=True)
     print(df.loc[0:30])
@@ -100,6 +57,7 @@ def process_t_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
 
 
 def process_st_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
+    #construct a convention st graph.
     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist, 'dist': dist})
     df = df.sort_values(by=['tgt','dist'], ignore_index=True)
     dfn = pd.DataFrame(columns=['rel', 'src', 'src_t', 'tgt', 'tgt_t', 'dis'])
@@ -142,6 +100,7 @@ def process_st_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
 
 
 def process_f_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
+    #to do: a function to be deleted
     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist, 'dist': dist})
     df = df.sort_values(by=['tgt','dist'], ignore_index=True)
     print(df.loc[0:30])
@@ -194,6 +153,7 @@ def process_f_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
 
 
 def process_s_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
+    # assign the same edge type to connections between a node's current state and all of its neigbhors' current states.
     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist, 'dist':dist})
     df = df.sort_values(by=['tgt', 'dist'], ignore_index=True)
     print(df.loc[0:30])
@@ -233,6 +193,7 @@ def process_s_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
 
 
 def process_a_graph(srclist, tgtlist, T, num_nodes, window=12):
+    # to do: a function to be deleted.
     df = pd.DataFrame({'src': srclist, 'tgt': tgtlist})
     df = df.sort_values(by=['tgt', 'src'], ignore_index=True)
     print(df)
