@@ -6,6 +6,7 @@ import pickle
 import dgl
 from utils.process import *
 class CTrainer:
+    # a trainer for models that make predictions once for all future steps.
     def __init__(self, model, optimizer, loss, dataloader, params, seq_out_len, scaler, device):
         self.model = model
         self.model.to(device)
@@ -96,7 +97,6 @@ class CTrainer:
     def eval(self, x, real_val):
         self.model.eval()
         dummy = torch.zeros(10).requires_grad_()
-
         output = self.model(x,dummy)
         output = output.transpose(1, 3)
         real = torch.unsqueeze(real_val,dim=1)
@@ -113,44 +113,6 @@ class CTrainer:
         outputs = []
         realy = []
         dummy = torch.zeros(10).requires_grad_()
-
-        # sx = self.model.transformer.emb1(torch.tensor(range(207)).to(self.device))
-        # tg = self.model.transformer.emb1(torch.tensor(range(207)).to(self.device))
-        # adj = torch.softmax(torch.matmul(sx, tg.transpose(1, 0)),dim=1)
-
-        # adj = torch.zeros(207,207).to(self.device)
-        # gsrc = []
-        # gtgt = []
-        # glabel = []
-        # gadj = load_adj('data/sensor_graph/adj_mx.pkl')
-        # gadj = torch.Tensor(gadj).to(self.device)
-        #
-        # for i in range(207):
-        #     for j in range(207):
-        #         cc = torch.cat((sx[i,:].unsqueeze(dim=0),tg[j,:].unsqueeze(dim=0)),dim=1)
-        #         w = torch.relu(self.model.transformer.lin1(cc))
-        #         adj[i,j] = self.model.transformer.lin2(w)
-        # adj = adj>0.5
-        # adj = adj + torch.eye(207).to(self.device)
-        # padj = adj.int()
-        # gadj = gadj>0
-        # gadj = gadj.int()
-        # acc = torch.sum(padj == gadj)
-        # acc = acc/207.**2
-        # print('learned graph acc is ', acc)
-        # # rec = torch.sum((padj==1)==(gadj==1))/torch.sum(gadj==1).float()
-        # # print('learned graph recall is ', rec)
-        # for i in range(207):
-        #     for j in range(207):
-        #         if adj[i, j] > 0.5:
-        #             gsrc.append(i)
-        #             gtgt.append(j)
-        #             glabel.append(1)
-        # print("number of edges", len(gsrc))
-        # g, d = process_st_graph(gsrc, gtgt, glabel, 12, 207, window=12)
-        # file = open("./data/metr_lg.pkl", "wb")
-        # self.model.graph = g
-
         for iter, (x, y) in enumerate(self.dataloader[name+'_loader'].get_iterator()):
             testx = torch.Tensor(x).to(self.device)
             testx = testx.transpose(1, 3)
@@ -177,26 +139,6 @@ class CTrainer:
         outputs = []
         realy = []
         dummy = torch.zeros(10).requires_grad_()
-
-        # sx = self.model.transformer.emb1(torch.tensor(range(207)).to(self.device))
-        # tg = self.model.transformer.emb2(torch.tensor(range(207)).to(self.device))
-        # adj = torch.matmul(sx, tg.transpose(1, 0))
-        # adj = adj > 0.5
-        # print(adj.int())
-        # gsrc = []
-        # gtgt = []
-        # glabel = []
-        #
-        # for i in range(207):
-        #     for j in range(207):
-        #         if adj[i, j] > 0:
-        #             gsrc.append(i)
-        #             gtgt.append(j)
-        #             glabel.append(1)
-        # print("number of edges", len(gsrc))
-        # g, d = process_st_graph(gsrc, gtgt, glabel, 12, 207, window=12)
-        # file = open("./data/metr_lg.pkl", "wb")
-        # self.model.graph = g
 
         for iter, (x, y) in enumerate(self.dataloader[name+'_loader'].get_iterator()):
             testx = torch.Tensor(x).to(self.device)
