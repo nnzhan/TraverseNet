@@ -10,7 +10,15 @@ python proc_data.py
 ```
 
 ## Training
+For our model
 ```
 python main.py --config ./config/traversenet.json
 ```
-
+For baseline models
+```
+python main.py --config ./config/astgcn.json
+python main.py --config ./config/dcrnn.json
+python main.py --config ./config/graphwavenet.json
+python main.py --config ./config/gru.json
+python main.py --config ./config/stgcn.json
+```
