@@ -92,6 +92,7 @@ def run(dataloader, device,params,net_params, adj_mx=None):
         trainer = CTrainer(model, optimizer, masked_mae, dataloader, params, net_params['seq_out_len'], scaler, device)
 
     elif net_params['model']=='traversenet-ab':
+        #traversenet-ab is a model setting in ablation study that interleaves temporal graphs with spatial graphs.
         file = open(params['graph_path'], "rb")
         graph = pickle.load(file)
         file.close()
@@ -142,6 +143,7 @@ def run(dataloader, device,params,net_params, adj_mx=None):
         trainer = RTrainer(model, optimizer, lr_scheduler, masked_mae, dataloader, params, net_params, scaler, device)
 
     elif net_params['model']=='gru':
+        #the GRU model is equivalent to a DCRNN model with identity graph adjacency matrix.
         adj_mx = np.eye(net_params['num_nodes'])
         model = DCRNNModel(adj_mx, device, net_params)
         optimizer = optim.Adam(model.parameters(), lr=params['lr'], eps=params['epsilon'])
