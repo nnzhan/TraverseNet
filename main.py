@@ -219,7 +219,7 @@ def main():
     parser.add_argument('--in_dim', type=int, help='dimension of inputs')
     parser.add_argument('--out_dim', type=int, help='dimension of outputs')
 
-    parser.add_argument('--dim', type=int, 'hidden feature dimsion')
+    parser.add_argument('--dim', type=int, help='hidden feature dimsion')
     parser.add_argument('--dropout', type=float, help='dropout rate')
     parser.add_argument('--lr', type=float, help='learning rate')
     parser.add_argument('--weight_decay', type=float, help='weight decay rate')

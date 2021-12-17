@@ -17,7 +17,7 @@ pickle.dump(g, file)
 batch_size = 64
 num_nodes = 358
 path='./data/PEMS03/PEMS03.npz'
-adjpath='./PEMS03/PEMS03.csv'
+adjpath='./data/PEMS03/PEMS03.csv'
 idpath='./data/PEMS03/PEMS03.txt'
 op = pemsD(num_nodes, path, adjpath, idpath)
 op.prcoess('./data/PEMS-D3.pkl')
