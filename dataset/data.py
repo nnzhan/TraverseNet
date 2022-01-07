@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import pickle
 from utils.process import *
-
+import json
 
 class StandardScaler():
     """
@@ -56,7 +56,7 @@ class DataLoader(object):
                 self.current_ind += 1
         return _wrapper()
 
-class pemsD:
+class PemsData:
     def __init__(self, num_nodes, path, adjpath, idpath=None):
         self.num_nodes = num_nodes
         self.path = path
@@ -66,99 +66,6 @@ class pemsD:
     def load(self):
         data = np.load(self.path)
         return data['data']
-
-    def load_graph(self):
-        node2id = dict()
-        if self.idpath is not None:
-            file = open(self.idpath)
-            id = 0
-            for li in file:
-                li = li.strip()
-                node2id[int(li)] = id
-                id += 1
-
-        file = open(self.adjpath)
-        nodes = [i for i in range(self.num_nodes)]
-        dist = [0 for i in range(self.num_nodes)]
-
-        srclist = []
-        tgtlist = []
-        dislist = []
-        adj = torch.zeros(self.num_nodes,self.num_nodes)
-
-        for li in file:
-            li = li.strip().split(',')
-            try:
-                li = [float(t) for t in li]
-            except Exception:
-                continue
-            if self.idpath is not None:
-                src = int(node2id[li[0]])
-                tgt = int(node2id[li[1]])
-            else:
-                src = int(li[0])
-                tgt = int(li[1])
-            adj[src,tgt] = li[2]
-            srclist.append(src)
-            tgtlist.append(tgt)
-            dislist.append(li[2])
-
-
-        return adj, nodes+srclist+tgtlist, nodes+tgtlist+srclist, dist+dislist+[t+1e9 for t in dislist]
-
-
-    def load_graph1(self):
-        node2id = dict()
-        if self.idpath is not None:
-            file = open(self.idpath)
-            id = 0
-            for li in file:
-                li = li.strip()
-                node2id[int(li)] = id
-                id += 1
-
-        file = open(self.adjpath)
-        nodes = [i for i in range(self.num_nodes)]
-        dist = [0 for i in range(self.num_nodes)]
-
-
-        adj = torch.zeros(self.num_nodes,self.num_nodes)
-
-        for li in file:
-            li = li.strip().split(',')
-            try:
-                li = [float(t) for t in li]
-            except Exception:
-                continue
-            if self.idpath is not None:
-                src = int(node2id[li[0]])
-                tgt = int(node2id[li[1]])
-            else:
-                src = int(li[0])
-                tgt = int(li[1])
-            if src!=tgt:
-                adj[src,tgt] = li[2]
-                #adj[tgt,src] = li[2]
-
-        srclist = []
-        tgtlist = []
-        dislist = []
-        # adj = torch.matmul(adj,adj)
-        for i in range(self.num_nodes):
-            for j in range(self.num_nodes):
-                if adj[i, j] > 1e-9 and i!=j:
-                    srclist.append(i)
-                    tgtlist.append(j)
-                    dislist.append(adj[i, j].item())
-
-        # for i in range(self.num_nodes):
-        #     for j in range(self.num_nodes):
-        #         if adj[i, j] > 1e-9 and i!=j:
-        #             srclist.append(j)
-        #             tgtlist.append(i)
-        #             dislist.append(1e9+adj[i, j].item())
-        # print('# edges', len(srclist))
-        return adj, nodes+srclist, nodes+tgtlist, dist+dislist
 
     def prcoess(self, savepath):
         data = {}
@@ -213,9 +120,233 @@ class pemsD:
         data['x_test'] = testx
         data['y_test'] = testy
 
-        data['adj'], srclist, tgtlist, distlist = self.load_graph1()
+        data['adj'], srclist, tgtlist, distlist = self.load_graph()
         file = open(savepath, "wb")
         pickle.dump(data, file)
+
+    def load_graph(self):
+        node2id = dict()
+        if self.idpath is not None:
+            file = open(self.idpath)
+            id = 0
+            for li in file:
+                li = li.strip()
+                node2id[int(li)] = id
+                id += 1
+
+        file = open(self.adjpath)
+        nodes = [i for i in range(self.num_nodes)]
+        dist = [0 for i in range(self.num_nodes)]
+        adj = torch.zeros(self.num_nodes,self.num_nodes)
+
+        for li in file:
+            li = li.strip().split(',')
+            try:
+                li = [float(t) for t in li]
+            except Exception:
+                continue
+            if self.idpath is not None:
+                src = int(node2id[li[0]])
+                tgt = int(node2id[li[1]])
+            else:
+                src = int(li[0])
+                tgt = int(li[1])
+            if src != tgt:
+                adj[src, tgt] = li[2]
+
+        srclist = []
+        tgtlist = []
+        dislist = []
+        for i in range(self.num_nodes):
+            for j in range(self.num_nodes):
+                if adj[i, j] > 1e-9 and i!=j:
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(adj[i, j].item())
+        return adj, nodes+srclist, nodes+tgtlist, dist+dislist
+
+
+class PoxData:
+    def __init__(self, path, xkey):
+        self.path = path
+        file = open(self.path)
+        self.store = json.load(file)
+        self.num_nodes = len(self.store['X'])
+        self.xkey = xkey
+        file.close()
+
+    def prcoess(self, savepath):
+        data = {}
+        x = np.array(self.store[self.xkey])
+        x = x.transpose()
+        x = torch.Tensor(x)
+        x = x.unsqueeze(0)
+        length = x.shape[2]
+        trainx = []
+        trainy = []
+        valx = []
+        valy = []
+        testx = []
+        testy = []
+
+        x = x.unsqueeze(dim=0)
+
+        for i in range(int(length*0.6)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            trainx.append(tx)
+            trainy.append(ty)
+        for i in range(int(length*0.6),int(length*0.8)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            valx.append(tx)
+            valy.append(ty)
+        for i in range(int(length*0.8), length-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            testx.append(tx)
+            testy.append(ty)
+
+        trainx = torch.cat(trainx,dim=0)
+        trainx = trainx.transpose(3,1)
+        trainy = torch.cat(trainy,dim=0)
+        trainy = trainy.transpose(3,1)
+
+        valx = torch.cat(valx,dim=0)
+        valx = valx.transpose(3,1)
+        valy = torch.cat(valy,dim=0)
+        valy = valy.transpose(3,1)
+
+        testx = torch.cat(testx,dim=0)
+        testx = testx.transpose(3,1)
+        testy = torch.cat(testy,dim=0)
+        testy = testy.transpose(3,1)
+
+        data['x_train'] = trainx
+        data['y_train'] = trainy
+        data['x_val'] = valx
+        data['y_val'] = valy
+        data['x_test'] = testx
+        data['y_test'] = testy
+
+        data['adj'], srclist, tgtlist, distlist = self.load_graph()
+        file = open(savepath, "wb")
+        pickle.dump(data, file)
+
+    def load_graph(self):
+        nodes = [i for i in range(self.num_nodes)]
+        dist = [0 for i in range(self.num_nodes)]
+        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        for i in range(len(self.store["edges"])):
+            src = self.store["edges"][i][0]
+            tgt = self.store["edges"][i][1]
+            if src != tgt:
+                if "weights" not in self.store.keys():
+                    adj[src, tgt] = 1
+                else:
+                    adj[src, tgt] = self.store["weights"][i]
+
+        srclist = []
+        tgtlist = []
+        dislist = []
+        for i in range(self.num_nodes):
+            for j in range(self.num_nodes):
+                if adj[i, j] > 1e-9 and i!=j:
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(adj[i, j].item())
+        return adj, nodes+srclist, nodes+tgtlist, dist+dislist
+
+
+class WindmillData:
+    def __init__(self, path):
+        self.path = path
+        file = open(self.path)
+        self.store = json.load(file)
+        self.num_nodes = len(self.store['block'][0])
+        file.close()
+
+    def prcoess(self, savepath):
+        data = {}
+        x = np.array(self.store['block'])
+        x = x.transpose()
+        x = torch.Tensor(x)
+        x = x.unsqueeze(0)
+        length = x.shape[2]
+        trainx = []
+        trainy = []
+        valx = []
+        valy = []
+        testx = []
+        testy = []
+
+        x = x.unsqueeze(dim=0)
+
+        for i in range(int(length*0.6)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            trainx.append(tx)
+            trainy.append(ty)
+        for i in range(int(length*0.6),int(length*0.8)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            valx.append(tx)
+            valy.append(ty)
+        for i in range(int(length*0.8), length-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            testx.append(tx)
+            testy.append(ty)
+
+        trainx = torch.cat(trainx,dim=0)
+        trainx = trainx.transpose(3,1)
+        trainy = torch.cat(trainy,dim=0)
+        trainy = trainy.transpose(3,1)
+
+        valx = torch.cat(valx,dim=0)
+        valx = valx.transpose(3,1)
+        valy = torch.cat(valy,dim=0)
+        valy = valy.transpose(3,1)
+
+        testx = torch.cat(testx,dim=0)
+        testx = testx.transpose(3,1)
+        testy = torch.cat(testy,dim=0)
+        testy = testy.transpose(3,1)
+
+        data['x_train'] = trainx
+        data['y_train'] = trainy
+        data['x_val'] = valx
+        data['y_val'] = valy
+        data['x_test'] = testx
+        data['y_test'] = testy
+
+        data['adj'], srclist, tgtlist, distlist = self.load_graph()
+        file = open(savepath, "wb")
+        pickle.dump(data, file)
+
+    def load_graph(self):
+        nodes = [i for i in range(self.num_nodes)]
+        dist = [0 for i in range(self.num_nodes)]
+        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        for i in range(len(self.store["edges"])):
+            src = self.store["edges"][i][0]
+            tgt = self.store["edges"][i][1]
+            if src != tgt:
+                if "weights" not in self.store.keys():
+                    adj[src, tgt] = 1
+                else:
+                    adj[src, tgt] = self.store["weights"][i]
+
+        srclist = []
+        tgtlist = []
+        dislist = []
+        for i in range(self.num_nodes):
+            for j in range(self.num_nodes):
+                if adj[i, j] > 1e-9 and i!=j:
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(adj[i, j].item())
+        return adj, nodes+srclist, nodes+tgtlist, dist+dislist
 
 
 def load_data(batch_size, path, device=None, normalize=True):
