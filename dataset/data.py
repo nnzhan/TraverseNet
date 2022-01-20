@@ -258,6 +258,100 @@ class PoxData:
         return adj, nodes+srclist, nodes+tgtlist, dist+dislist
 
 
+class MulData:
+    def __init__(self, path):
+        self.path = path
+        self.x = np.loadtxt(path, delimiter=",")
+        self.num_nodes = self.x.shape[1]
+
+    def prcoess(self, savepath):
+        data = {}
+        x = self.x
+        x = x.transpose()
+        x = torch.Tensor(x)
+        x = x.unsqueeze(0)
+        length = x.shape[2]
+        trainx = []
+        trainy = []
+        valx = []
+        valy = []
+        testx = []
+        testy = []
+
+        x = x.unsqueeze(dim=0)
+
+        for i in range(int(length*0.6)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            trainx.append(tx)
+            trainy.append(ty)
+        for i in range(int(length*0.6),int(length*0.8)-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            valx.append(tx)
+            valy.append(ty)
+        for i in range(int(length*0.8), length-24):
+            tx = x[...,i:i+12]
+            ty = x[...,i+12:i+24]
+            testx.append(tx)
+            testy.append(ty)
+
+        trainx = torch.cat(trainx,dim=0)
+        trainx = trainx.transpose(3,1)
+        trainy = torch.cat(trainy,dim=0)
+        trainy = trainy.transpose(3,1)
+
+        valx = torch.cat(valx,dim=0)
+        valx = valx.transpose(3,1)
+        valy = torch.cat(valy,dim=0)
+        valy = valy.transpose(3,1)
+
+        testx = torch.cat(testx,dim=0)
+        testx = testx.transpose(3,1)
+        testy = torch.cat(testy,dim=0)
+        testy = testy.transpose(3,1)
+
+        data['x_train'] = trainx
+        data['y_train'] = trainy
+        data['x_val'] = valx
+        data['y_val'] = valy
+        data['x_test'] = testx
+        data['y_test'] = testy
+        data['adj'], srclist, tgtlist, distlist = self.load_graph(x[...,0:int(length*0.6)-1].squeeze())
+        file = open(savepath, "wb")
+        pickle.dump(data, file)
+        return data['adj'], srclist, tgtlist, distlist
+
+    def cos(self, x1, x2):
+        x1 = x1 - torch.mean(x1)
+        x2 = x2 - torch.mean(x2)
+        n = torch.sum(x1*x2)
+        d1 = torch.sum(x1**2)**0.5
+        d2 = torch.sum(x2**2)**0.5
+        out = n/(d1*d2)
+        return out
+
+    def load_graph(self, x):
+        nodes = [i for i in range(self.num_nodes)]
+        sim = [1 for i in range(self.num_nodes)]
+        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        srclist = []
+        tgtlist = []
+        dislist = []
+        if "solar" in self.path:
+            thr = 0.975
+        elif "electricity" in self.path:
+            thr = 0.93
+        for i in range(self.num_nodes):
+            for j in range(self.num_nodes):
+                w = self.cos(x[i, :], x[j, :])
+                if w >= thr or w<=-thr:
+                    adj[i, j] = w
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(adj[i, j].item())
+        return adj, nodes+srclist, nodes+tgtlist, sim+dislist
+
 class WindmillData:
     def __init__(self, path):
         self.path = path

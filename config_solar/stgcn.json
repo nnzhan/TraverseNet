@@ -1,0 +1,28 @@
+{
+    "gpu": {
+        "use": true,
+        "id": 0
+    },
+
+    "params": {
+        "seed": 9,
+        "epochs": 50,
+        "runs": 5,
+        "batch_size": 64,
+        "lr": 0.001,
+        "weight_decay": 0,
+        "clip": 5,
+        "print_every": 50,
+        "dataset": "solar",
+        "out_dir": "save_stgcn"
+    },
+
+    "net_params": {
+        "model": "stgcn",
+        "in_dim": 1,
+        "num_nodes": 137,
+        "seq_in_len": 12,
+        "seq_out_len": 12
+    }
+}
+
