@@ -342,6 +342,8 @@ class MulData:
             thr = 0.975
         elif "electricity" in self.path:
             thr = 0.93
+        else:
+            thr = 0
         for i in range(self.num_nodes):
             for j in range(self.num_nodes):
                 w = self.cos(x[i, :], x[j, :])

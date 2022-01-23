@@ -27,7 +27,7 @@
         "gcn_bool": true,
         "addaptadj": false,
         "num_nodes": 170,
-        "dropout": 0.3,
+        "dropout": 0,
         "seq_in_len": 12,
         "seq_out_len": 12,
         "residual_channels": 32,

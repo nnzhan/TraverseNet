@@ -14,7 +14,7 @@
         "clip": 5,
         "print_every": 50,
         "dataset": "solar",
-        "graph_path": "data/PEMS-D8-Gt.pkl",
+        "graph_path": "data/solar-Gt.pkl",
         "out_dir": "save_tgnet"
     },
 
