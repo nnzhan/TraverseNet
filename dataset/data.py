@@ -137,7 +137,7 @@ class PemsData:
         file = open(self.adjpath)
         nodes = [i for i in range(self.num_nodes)]
         dist = [0 for i in range(self.num_nodes)]
-        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        adj = torch.eyes(self.num_nodes,self.num_nodes)
 
         for li in file:
             li = li.strip().split(',')
@@ -236,7 +236,7 @@ class PoxData:
     def load_graph(self):
         nodes = [i for i in range(self.num_nodes)]
         dist = [0 for i in range(self.num_nodes)]
-        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        adj = torch.eyes(self.num_nodes,self.num_nodes)
         for i in range(len(self.store["edges"])):
             src = self.store["edges"][i][0]
             tgt = self.store["edges"][i][1]
@@ -332,8 +332,6 @@ class MulData:
         return out
 
     def load_graph(self, x):
-        nodes = [i for i in range(self.num_nodes)]
-        sim = [1 for i in range(self.num_nodes)]
         adj = torch.zeros(self.num_nodes,self.num_nodes)
         srclist = []
         tgtlist = []
@@ -347,12 +345,19 @@ class MulData:
         for i in range(self.num_nodes):
             for j in range(self.num_nodes):
                 w = self.cos(x[i, :], x[j, :])
+                if i == j:
+                    adj[i, j] = 1
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(0)
+                    continue
                 if w >= thr or w<=-thr:
                     adj[i, j] = w
                     srclist.append(i)
                     tgtlist.append(j)
-                    dislist.append(adj[i, j].item())
-        return adj, nodes+srclist, nodes+tgtlist, sim+dislist
+                    dislist.append(w.item())
+        return adj, srclist, tgtlist, dislist
+
 
 class WindmillData:
     def __init__(self, path):
