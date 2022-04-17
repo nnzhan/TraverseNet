@@ -33,6 +33,11 @@ def process_t_graph(srclist, tgtlist, dist, T, num_nodes, window=12):
             for k in range(s,j+1):
                 dfn = dfn.append({'rel': rela, 'src': int(df.loc[i][0]), 'src_t': int(k), 'tgt': int(df.loc[i][1]), 'tgt_t': int(j), 'dis': ew},
                                  ignore_index=True)
+            if j ==0 and df.loc[i][0] == df.loc[i][1]: 
+                continue
+            #if df.loc[i][0] == df.loc[i][1]:
+            dfn = dfn.append({'rel': rela, 'src': int(df.loc[i][1]), 'src_t': int(j), 'tgt': int(df.loc[i][1]), 'tgt_t': int(j), 'dis': ew},
+                                 ignore_index=True)
     print(dfn)
     g = dict()
     ds = dict()

@@ -119,12 +119,50 @@ class PemsData:
         data['y_val'] = valy
         data['x_test'] = testx
         data['y_test'] = testy
-
-        data['adj'], srclist, tgtlist, distlist = self.load_graph()
+    
+        data['adj'], srclist, tgtlist, distlist = self.load_graph(x[...,0:int(length*0.6)-1].squeeze())
         file = open(savepath, "wb")
         pickle.dump(data, file)
+        return data['adj'], srclist, tgtlist, distlist
 
-    def load_graph(self):
+    def cos(self, x1, x2):
+        x1 = x1 - torch.mean(x1)
+        x2 = x2 - torch.mean(x2)
+        n = torch.sum(x1*x2)
+        d1 = torch.sum(x1**2)**0.5
+        d2 = torch.sum(x2**2)**0.5
+        out = n/(d1*d2)
+        return out
+
+    def load_graph(self, x):
+        adj = torch.zeros(self.num_nodes,self.num_nodes)
+        srclist = []
+        tgtlist = []
+        dislist = []
+        if "08" in self.path:
+            thr = 0.995
+        elif "04" in self.path:
+            thr = 0.995
+        else:
+            thr = 0.995
+        print(x.shape)
+        for i in range(self.num_nodes):
+            for j in range(self.num_nodes):
+                w = self.cos(x[0, i, :], x[0, j, :])
+                if i == j:
+                    adj[i, j] = 1
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(0)
+                    continue
+                if w >= thr or w<=-thr:
+                    adj[i, j] = w
+                    srclist.append(i)
+                    tgtlist.append(j)
+                    dislist.append(w.item())
+        return adj, srclist, tgtlist, dislist
+
+    def load_graph1(self):
         node2id = dict()
         if self.idpath is not None:
             file = open(self.idpath)
@@ -137,7 +175,7 @@ class PemsData:
         file = open(self.adjpath)
         nodes = [i for i in range(self.num_nodes)]
         dist = [0 for i in range(self.num_nodes)]
-        adj = torch.eyes(self.num_nodes,self.num_nodes)
+        adj = torch.eye(self.num_nodes)
 
         for li in file:
             li = li.strip().split(',')
@@ -233,10 +271,19 @@ class PoxData:
         file = open(savepath, "wb")
         pickle.dump(data, file)
 
+    def cos(self, x1, x2):
+        x1 = x1 - torch.mean(x1)
+        x2 = x2 - torch.mean(x2)
+        n = torch.sum(x1*x2)
+        d1 = torch.sum(x1**2)**0.5
+        d2 = torch.sum(x2**2)**0.5
+        out = n/(d1*d2)
+        return out
+
     def load_graph(self):
         nodes = [i for i in range(self.num_nodes)]
         dist = [0 for i in range(self.num_nodes)]
-        adj = torch.eyes(self.num_nodes,self.num_nodes)
+        adj = torch.eye(self.num_nodes)
         for i in range(len(self.store["edges"])):
             src = self.store["edges"][i][0]
             tgt = self.store["edges"][i][1]

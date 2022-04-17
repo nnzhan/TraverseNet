@@ -13,10 +13,9 @@ class HeteroGraphConv(nn.Module):
             set_allow_zero_in_degree_fn = getattr(v, 'set_allow_zero_in_degree', None)
             if callable(set_allow_zero_in_degree_fn):
                 set_allow_zero_in_degree_fn(True)
-
-        self.kn = th.nn.Linear(dim, dim)
-        self.qn = th.nn.Linear(dim, dim)
-        self.vn = th.nn.Linear(dim, dim)
+        self.kn = th.nn.Linear(dim, dim, bias=False)
+        self.qn = th.nn.Linear(dim, dim, bias=False)
+        self.vn = th.nn.Linear(dim, dim, bias=False)
 
         self.w1 = nn.Parameter(th.FloatTensor(size=(1, dim)))
         self.w2 = nn.Parameter(th.FloatTensor(size=(1, dim)))
@@ -33,13 +32,17 @@ class HeteroGraphConv(nn.Module):
             kv.append(self.kn(tensors[i]))
             qv.append(self.qn(tensors[i]))
             vv.append(self.vn(tensors[i]))
-
         alpha = []
         for i in range(self.num_rel):
+            #p = (kv[i] / (th.sum(kv[i]**2, dim=3)**0.5 + 1e-9).unsqueeze(dim=3)) * (qv[0]/(th.sum(qv[0]**2, dim=3)**0.5+1e-9).unsqueeze(dim=3))
             p = kv[i] * self.w1 + qv[0] * self.w2
+            #p = (kv[i]) * (qv[0]) / 64
             p = p.sum(dim=3)
             alpha.append(p)
         alpha = th.cat(alpha, dim=2)
+        mask = th.zeros_like(alpha) - float("Inf")
+        mask = th.where(alpha==0, mask, th.zeros_like(mask))
+        alpha = alpha + mask
         alpha = th.softmax(alpha, dim=2)
         tensors = th.cat(vv, dim=2)
         tensors = tensors.permute(3, 0, 1, 2)

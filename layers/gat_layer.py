@@ -253,8 +253,8 @@ class GATConvs(nn.Module):
                     self.fc_src, self.fc_src1, self.fc_dst = self.fc1, self.fc1, self.fc1
                 shape = h_src.shape
                 feat_src = self.fc_src(h_src).view(*shape[:-1], self._num_heads, self._out_feats)
-                feat_src1 = self.fc_src1(h_src).view(*shape[:-1], self._num_heads, self._out_feats)
-                feat_dst = self.fc_dst(h_dst).view(*shape[:-1], self._num_heads, self._out_feats)
+                feat_src1 = self.fc_src(h_src).view(*shape[:-1], self._num_heads, self._out_feats)
+                feat_dst = self.fc_src(h_dst).view(*shape[:-1], self._num_heads, self._out_feats)
             else:
                 h_src = h_dst = self.feat_drop(feat)
                 shape = h_src.shape
@@ -310,9 +310,9 @@ class GATConvs(nn.Module):
 
             rst = graph.dstdata['ft']
             # residual
-            if self.res_fc is not None:
-                resval = self.res_fc(h_dst).view(h_dst.shape[0], -1, self._out_feats)
-                rst = rst + resval
+            #if self.res_fc is not None:
+                #resval = self.res_fc(h_dst).view(h_dst.shape[0], -1, self._out_feats)
+            #    rst = rst + resval
             # activation
             if self.activation:
                 rst = self.activation(rst)
